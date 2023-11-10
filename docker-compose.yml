@@ -1,0 +1,35 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql:latest
+    deploy:
+      replicas: 1
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: personas
+      # MYSQL_USER: root
+      # MYSQL_PASSWORD: root
+    ports:
+      - "3306:3306"
+    networks:
+      - mynetwork
+    volumes:
+      - ./sql/mysql_data:/var/lib/mysql
+
+  rest:
+    image: rest-personas
+    deploy:
+      replicas: 1
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./rest:/app
+
+networks:
+  mynetwork:
+    driver: overlay
+
+volumes:
+  mysql_data:
+    driver: overlay

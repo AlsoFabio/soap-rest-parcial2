@@ -1,0 +1,11 @@
+inicializar
+```
+docker stack deploy -c docker-compose.yml myservice
+```
+
+
+rest
+```
+docker build -t rest-personas ./rest
+docker service update --image nombre_de_tu_imagen nombre_de_tu_servicio
+```
