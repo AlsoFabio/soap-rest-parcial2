@@ -1,9 +1,7 @@
 FROM mysql:debian
 
-WORKDIR /var/lib/mysql
+ENV MYSQL_DATABASE personas
+ENV MYSQL_ROOT_PASSWORD root
 
-EXPOSE 3306
 
-VOLUME /var/lib/mysql
-
-ENV MYSQL_ROOT_PASSWORD=1234
+COPY ./personas.sql /docker-entrypoint-initdb.d/

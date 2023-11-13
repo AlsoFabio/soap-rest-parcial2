@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <title>Document</title>
+</head>
+
+<body>
+    <form id="miFormulario">
+        <label for="apellido">Apellido:</label><br>
+        <input type="text" id="apellido" name="apellido" required><br>
+
+        <label for="nombre">Nombre:</label><br>
+        <input type="text" id="nombre" name="nombre" required><br>
+
+        <label for="dni">DNI:</label><br>
+        <input type="number" id="dni" name="dni" required><br>
+
+        <button type="button" onclick="enviarDatos()">Grabar con servicio web REST</button>
+        <p>http://localhost:8080/insertar_con_rest</p>
+    </form>
+    <h2>Listado de personas con soap</h2>
+    <p>http:localhost:8888/consultar_con_soap</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Apellido</th>
+                <th>Nombre</th>
+                <th>DNI</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se agregarán los datos -->
+        </tbody>
+    </table>
+    <script>
+        function enviarDatos() {
+            // Obtener los valores del formulario
+            var apellido = document.getElementById('apellido').value;
+            var nombre = document.getElementById('nombre').value;
+            var dni = document.getElementById('dni').value;
+
+            // Crear un objeto con los datos a enviar
+            var data = {
+                apellidos: apellido,
+                nombres: nombre,
+                dni: dni
+            };
+
+            // Realizar la solicitud HTTP usando fetch
+            fetch('http://localhost:8080/insertar_con_rest', {
+                method: 'POST', // Puedes cambiar a 'GET' si es necesario
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    // Puedes realizar acciones adicionales después de recibir la respuesta
+                })
+                .catch(error => {
+                    console.error('Error al enviar la solicitud:', error);
+                });
+        }
+
+        const consultarPersonas = async () => {
+            try {
+                const response = await fetch('http://localhost:8888/consultar_con_soap', {
+                    method: 'post',
+                    body: (`<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://localhost:8888/consultar_con_soap">
+        <soapenv:Header />
+        <soapenv:Body>
+          <tns:consultarPersonasRequest>
+          </tns:consultarPersonasRequest>
+        </soapenv:Body>
+      </soapenv:Envelope>`),
+                    headers: {
+                        'Content-Type': 'text/xml',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.text();
+                    const parseJs = new DOMParser();
+                    const xmlDoc = parseJs.parseFromString(data, "text/xml");
+                    const personasArrayXML = xmlDoc.querySelectorAll("result");
+                    const personasArray = Array.from(personasArrayXML).map(persona => {
+                        return {
+                            id: persona.querySelector("id").textContent,
+                            nombres: persona.querySelector("nombres").textContent,
+                            apellidos: persona.querySelector("apellidos").textContent,
+                            dni: persona.querySelector("dni").textContent,
+                        };
+                    });
+
+                    // Llamar a la función para mostrar los datos en la tabla
+                    mostrarDatosEnTabla(personasArray);
+                } else {
+                    console.log(response);
+                }
+            } catch (error) {
+                console.error("Error al consultar personas:", error);
+            }
+        };
+
+        const mostrarDatosEnTabla = (personasArray) => {
+            const tbody = document.querySelector('table tbody');
+
+            // Limpiar contenido anterior de la tabla
+            tbody.innerHTML = '';
+
+            personasArray.forEach(persona => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+      <td>${persona.apellidos}</td>
+      <td>${persona.nombres}</td>
+      <td>${persona.dni}</td>
+    `;
+                tbody.appendChild(row);
+            });
+        };
+
+        // Llamar a la función al cargar la página o en el momento adecuado
+        consultarPersonas();
+    </script>
+</body>
+
+</html>

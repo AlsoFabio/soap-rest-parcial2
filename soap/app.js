@@ -1,15 +1,13 @@
 import express from 'express'
 import { Sequelize, DataTypes } from 'sequelize'
+import soap from 'soap'
 import cors from 'cors'
 import morgan from 'morgan'
 
 const app = express()
-const port = 8080
-
+const port = 8888
 app.use(cors())
 app.use(morgan('combined'))
-app.use(express.json())
-
 // ----------------------------------------------------------------
 const dbConnInfo = {
   name: 'personas',
@@ -32,11 +30,6 @@ const sequelize = new Sequelize(
 const Personas = sequelize.define(
   'personas',
   {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
     apellidos: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -58,30 +51,37 @@ const Personas = sequelize.define(
 sequelize.sync()
 // ----------------------------------------------------------------
 
-app.post('/insertar_con_rest', async(req, res) => {
-  const msgTry = 'Persona nueva insertada con éxito'
+const consultarPersonas = async() => {
   try {
-    const { nombres, apellidos, dni } = req.body
-    const nuevaPersona = await Personas.create({ nombres, apellidos, dni })
-
-    console.log(msgTry)
-    res.status(201).json({
-      ok: true,
-      status: 201,
-      msg: msgTry,
-      nuevaPersona,
-    })
+    const personas = await Personas.findAll({ raw: true })
+    return personas
   } catch (error) {
-    console.log('Error')
-    console.error(error)
-    res.status(500).json({
-      ok: false,
-      status: 500,
-      msg: error.message,
-    })
+    throw error
   }
-})
+}
 
+const soapService = {
+  ConsultarPersonasService: {
+    ConsultarPersonasPort: {
+      consultarPersonas: async(args, callback) => {
+        try {
+          const personas = await consultarPersonas()
+          console.log(personas)
+          callback(null, { result: personas })
+        } catch (error) {
+          console.error('Error en la consulta SOAP: ', error.message)
+          callback(error, null)
+        }
+      },
+    },
+  },
+}
 app.listen(port, () => {
-  console.log(`Servidor Express REST escuchando en el puerto ${port}`)
+  console.log(`Servidor SOAP escuchando en el puerto ${port}`)
+})
+import { readFileSync } from 'fs'
+const xml = readFileSync('./consultarPersonas.wsdl', 'utf8')
+
+soap.listen(app, '/consultar_con_soap', soapService, xml, (err, res) => {
+  console.log(`SOAP en ${res.path}`)
 })
