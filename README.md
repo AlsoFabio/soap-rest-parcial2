@@ -38,8 +38,12 @@ Este repositorio contiene una aplicación que consta de tres servicios principal
    ```
 
    Este comando creará y desplegará los servicios especificados en el archivo `docker-compose.yml`.
+5. **Probar el Servicio**
 
-5. **Finalizar los Servicios:**
+   ingrese al siguiente link para empezar a probar el servicio
+   http://localhost:3000/
+
+7. **Finalizar los Servicios:**
 
    Para detener y eliminar los servicios, puedes utilizar el siguiente comando:
 
